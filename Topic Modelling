@@ -1,0 +1,68 @@
+library(congressbr)
+library(tm)
+library(tidyverse)
+library(tidytext)
+library(RTextTools)
+library(topicmodels)
+library(tm)
+library(NLP)
+library(SnowballC)
+library(RSiteCatalyst)
+library(ldatuning)
+library(topicmodels)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+PLsCamara <- cham_bills(type = "PL", year = 2017)
+
+dtm <- create_matrix(PLsCamara$ementa_txt, 
+                     stemWords=TRUE, 
+                     removeStopwords=TRUE, 
+                     minWordLength=1,
+                     removePunctuation= TRUE)
+
+PLs_lda <- LDA(dtm, k = 2, control = list(seed = 1234))
+PLs_lda
+
+PLs_topics <- tidy(PLs_lda, matrix = "beta")
+PLs_topics
+
+PLs_top_terms <- PLs_topics %>%
+  group_by(topic) %>%
+  top_n(10, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+PLs_top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+
+
+
+beta_spread <- PLs_topics %>%
+  mutate(topic = paste0("topic", topic)) %>%
+  spread(topic, beta) %>%
+  filter(topic1 > .001 | topic2 > .001) %>%
+  mutate(log_ratio = log2(topic2 / topic1))
+
+beta_spread
+
+PLs_documents <- tidy(PLs_lda, matrix = "gamma")
+PLs_documents
+
+table <-tidy(dtm) %>%
+  filter(document == 6) %>%
+  arrange(desc(count))
+
+result <- FindTopicsNumber(
+  dtm,
+  topics = seq(from = 2, to = 15, by = 1),
+  method = "Gibbs",
+  control = list(seed = 77),
+  mc.cores = 2L,
+  verbose = TRUE
+)
