@@ -60,7 +60,8 @@ table <-tidy(dtm) %>%
 
 result <- FindTopicsNumber(
   dtm,
-  topics = seq(from = 2, to = 15, by = 1),
+  topics = seq(from = 100, to = 1000, by = 1),
+  metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"),
   method = "Gibbs",
   control = list(seed = 77),
   mc.cores = 2L,
