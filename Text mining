@@ -1,0 +1,274 @@
+library(stringr)
+library(dplyr)
+library(tm)
+library(ggplot2)
+library(slam)
+library(gridExtra)
+library(textmineR)
+library(RWeka)
+library(caret)
+library(SnowballC)
+library(tau)
+library(RTextTools)
+library(data.table)
+library(e1071)
+library(tidyverse)
+library(tidytext)
+library(lubridate)
+library(highcharter)
+library(LiblineaR)
+library(naivebayes)
+library(caTools)
+
+#Opening file
+setwd("Your Path")
+
+BillVotes <- fread("Bills_Votes_1991_2018_2.csv", head=TRUE, sep=",")
+
+#Deleting variables that will not be used
+BillVotes <- subset(BillVotes, select = -c(1,3:10, 12:32,35, 38:40))
+
+#splitting the date into: day, month, and year
+BillVotes$vote_date=ymd(BillVotes$vote_date)
+BillVotes$month=month(BillVotes$vote_date)
+BillVotes$year=year(BillVotes$vote_date)
+BillVotes$day=day(BillVotes$vote_date)
+
+BillVotes$day=as.factor(BillVotes$day)
+BillVotes$month=as.factor(BillVotes$month)
+BillVotes$year=as.factor(BillVotes$year)
+
+#Transforming variable to the right format
+BillVotes$ementa_txt<-as.character(BillVotes$ementa_txt)
+BillVotes$legislator_vote<-as.factor(BillVotes$legislator_vote)
+
+######################################
+
+#Creating a data set for Arnaldo Faria de Sa
+
+votesSessim <- BillVotes %>%
+  dplyr::filter(legislator_name=="Simao Sessim")
+
+
+#visualizing the distribution of Yes and No votes throughout the years
+
+votesSessim %>%
+  ggplot(aes(legislator_vote)) +
+  geom_bar()
+
+plotSessim<- ggplot() + geom_bar(aes(y = ..count..,
+                                    x =as.factor(year),
+                                    fill = legislator_vote),
+                                data=votesSessim,
+                                position = position_stack())
+
+plotSessim + scale_fill_grey(start=0.6, end=0.4) + theme_classic() + xlab("Year") + ylab("Votes") + labs(title="Votes: SimÃ£o Sessim", size = 15)
+
+###################################################################################################################################
+
+#                                           Text Mining / Text Pre-processing
+#                                                        (n-gram)
+
+###################################################################################################################################
+
+#Creating corpus
+corpus <- VCorpus(VectorSource(votesSessim$ementa_txt))
+
+#Cleaning
+corpus <- tm_map(corpus, content_transformer(tolower))
+corpus <- tm_map(corpus,removePunctuation)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, stripWhitespace)
+
+#Removing specific characters
+toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x))
+corpus <- tm_map(corpus, toSpace, "Âº")
+corpus <- tm_map(corpus, toSpace, "Â°")
+corpus <- tm_map(corpus, toSpace, "Âª")
+corpus <- tm_map(corpus, toSpace, "Â§")
+
+
+#Creating a list to remove stopwords: words that might compromise the analysis
+MyStopWords = c(stopwords("pt"),"federal", "lei", "nacional", "art", "janeiro", "fevereiro", "marÃ§o", "abril", "maio", "junho", "julho", 
+                "agosto", "setembro", "outubro", "novembro", "dezembro", "alteracao", "altera", "criacao", "outras", 
+                "providencias", "dispoe","sobre", "ato","para","vedar", "estabelecer", "estabelece", "quais", "ementa",
+                "instituir", "outra", "transitoria", "prever", "dispor", "outras", "redacao", "cria", "acrescentar", "caput", 
+                "S", "c", "nova", "disposicoes", "constituicao","leis", "revoga", "arts","sobre", "dispositivos", "normas", 
+                'institui', "acrescenta", "transitorias", "projeto", "legislativo", "executivo", "judiciario", "modifica",
+                "complementar", "constitucional", "constitucionais", "poder", "artigo", "artigos", "inciso", "incisos", "emenda", 
+                "transicao", "trata", "tratar", "fins", "introduz", "fins", "especifica", "medida", "provisoria", "r", "b", "s",
+                "alinea", "j", "eou", "estados", "distrito", "municipios", "capitulo", "n", "decretolei", "adct", "i", "alinea", "alineas")
+
+#Removing stopwords
+corpus <-tm_map(corpus,removeWords, MyStopWords)
+
+#Transforming corpus to plain text
+corpus = tm_map(corpus, PlainTextDocument)
+
+#Comparing clean corpus with text
+corpus[[20]]$content
+
+votesSessim [20,2]
+
+#Ploting Bigrams
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+BigramTokenTDM <- TermDocumentMatrix(corpus, control = list(tokenize = BigramTokenizer))
+freq <- sort(rowSums(as.matrix(BigramTokenTDM)),decreasing = TRUE)
+freq.df <- data.frame(word=names(freq), freq=freq)
+ggplot(head(freq.df,15), aes(reorder(word,freq), freq)) +
+  geom_bar(stat = "identity") + coord_flip() +
+  xlab("Bigrams") + ylab("Frequency")
+
+#Ploting Trigrams
+TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
+TrigramTokenTDM <- TermDocumentMatrix(corpus, control = list(tokenize = TrigramTokenizer))
+freq <- sort(rowSums(as.matrix(TrigramTokenTDM)),decreasing = TRUE)
+freq.df <- data.frame(word=names(freq), freq=freq)
+ggplot(head(freq.df,15), aes(reorder(word,freq), freq)) +
+  geom_bar(stat = "identity") + coord_flip() +
+  xlab("Trigrams") + ylab("Frequency")
+
+#creating Tokenizer with n-gram(1,2,3)
+Tokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 3))
+
+#Creating Document Term Matrix for analysis with n-grams weighted TF-IDF, and removing small words
+dtm <- DocumentTermMatrix(corpus, control = list(tokenize = Tokenizer, 
+                                                 weighting = weightTfIdf,
+                                                 wordLengths=c(4,Inf)))
+
+
+#################################################################################################################################
+
+#                              Pre-processing for machine learning analysis
+
+################################################################################################################################
+
+#Separating DTM intro train and test
+set.seed(100)
+TrainIndex<-createDataPartition(votesSessim$legislator_vote,p=0.60,list=F)
+dtm_train<-dtm[TrainIndex,]
+dtm_test<-dtm[ -TrainIndex,]
+nrow(dtm_train)
+nrow(dtm_test)
+
+#Separating votes into train and test
+Sessim_train_votes <- votesSessim[TrainIndex, ]$legislator_vote
+Sessim_test_votes  <- votesSessim[-TrainIndex, ]$legislator_vote
+
+#Finding frequent terms
+Sessim_freq_words <- findFreqTerms(dtm_train,2,Inf)
+
+#Creating DTM with frequent terms only
+Sessim_dtm_freq_train <- dtm_train[ , Sessim_freq_words]
+Sessim_dtm_freq_test <- dtm_test[ , Sessim_freq_words]
+
+############################################################################################################
+
+#                                            Naive Bayes
+
+############################################################################################################
+
+trctrl <- trainControl(method = "none")
+
+#train
+nb_mod_S <- train(x = Sessim_train,
+                  y = as.factor(Sessim_train_votes),
+                  method = "naive_bayes",
+                  trControl = trctrl,
+                  tuneGrid = data.frame(laplace = 1,
+                                        usekernel = FALSE,
+                                        adjust = FALSE))
+#predict
+nb_pred_S <- predict(nb_mod_S,
+                     newdata = Sessim_test)
+
+#confunsion matrix
+nb_cm_S <- confusionMatrix(as.factor(Sessim_test_votes), nb_pred_S)
+nb_cm_S
+
+
+############################################################################################################
+
+#                                            SUpport Vector Machine
+
+############################################################################################################
+
+#train
+svm_mod_S <- train(x = Sessim_train,
+                   y = as.factor(Sessim_train_votes),
+                   method = "svmRadial",
+                   preProcess = "scale",
+                   trControl = trctrl)
+
+#predict
+svm_pred_S <- predict(svm_mod_S,
+                      newdata = Sessim_test)
+
+#confunsion matrix
+svm_cm_S <- confusionMatrix(svm_pred_S, Sessim_test_votes)
+svm_cm_S
+
+############################################################################################################
+
+#                                            Logit Boost
+
+############################################################################################################
+
+#train
+logitboost_mod_S <- train(x = Sessim_train,
+                          y = as.factor(Sessim_train_votes),
+                          method = "LogitBoost",
+                          trControl = trctrl)
+
+#predict
+logitboost_pred_S <- predict(logitboost_mod_S,
+                           newdata = Sessim_test)
+
+#confunsion matrix
+logitboost_cm_S <- confusionMatrix(logitboost_pred_S, Sessim_test_votes)
+logitboost_cm_S
+
+############################################################################################################
+
+#                                            Random Forest
+
+############################################################################################################
+
+#train
+rf_mod <- train(x = Sessim_train, 
+                y = as.factor(Sessim_train_votes), 
+                method = "ranger",
+                trControl = trctrl,
+                tuneGrid = data.frame(mtry = floor(sqrt(dim(Sessim_train)[2])),
+                                      splitrule = "gini",
+                                      min.node.size = 1))
+#predict
+rf_pred <- predict(rf_mod,
+                   newdata = Sessim_test)
+
+#confunsion matrix
+rf_cm <- confusionMatrix(rf_pred, Sessim_test_votes)
+rf_cm
+
+
+############################################################################################################
+
+#                                            Plotting results
+
+############################################################################################################
+mod_results <- rbind(
+  svm_cm_S$overall, 
+  nb_cm_S$overall,
+  logitboost_cm_S$overall,
+  rf_cm$overall
+) %>%
+  as.data.frame() %>%
+  mutate(model = c("SVM", "Naive-Bayes", "LogitBoost", "Random forest")
+  )
+
+mod_results %>%
+  ggplot(aes(model, Accuracy)) +
+  geom_point() +
+  ylim(0, 1) +
+  geom_hline(yintercept = mod_results$AccuracyNull[1],
+             color = "red")
