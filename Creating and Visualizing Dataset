@@ -1,0 +1,311 @@
+library(congressbr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(data.table)
+library(leaflet)
+library(knitr)
+library(highcharter)
+library(plyr)
+library(tidyr)
+library(viridis)
+library(plotly)
+library(tidygraph)
+library(gridExtra)
+library(tidyverse)
+library(leaflet)
+library(knitr)
+library(tidyr)
+library(tidygraph)
+
+###########################################################################################################################
+
+#                                                Creating the dataset
+
+##########################################################################################################################
+
+#Saving Ordinary Bill in variables
+
+PLs1991 <- cham_bills(year = "1991", type = "PL")
+
+PLs1992 <- cham_bills(year = "1992", type = "PL")
+
+PLs1993 <- cham_bills(year = "1993", type = "PL")
+
+PLs1994 <- cham_bills(year = "1994", type = "PL")
+
+PLs1995 <- cham_bills(year = "1995", type = "PL")
+
+PLs1996 <- cham_bills(year = "1996", type = "PL")
+
+PLs1997 <- cham_bills(year = "1997", type = "PL")
+
+PLs1998 <- cham_bills(year = "1998", type = "PL")
+
+PLs1999 <- cham_bills(year = "1999", type = "PL")
+
+PLs2000 <- cham_bills(year = "2000", type = "PL")
+
+PLs2001 <- cham_bills(year = "2001", type = "PL")
+
+PLs2002 <- cham_bills(year = "2002", type = "PL")
+
+PLs2003 <- cham_bills(year = "2003", type = "PL")
+
+PLs2004 <- cham_bills(year = "2004", type = "PL")
+
+PLs2005 <- cham_bills(year = "2005", type = "PL")
+
+PLs2006 <- cham_bills(year = "2006", type = "PL")
+
+PLs2007 <- cham_bills(year = "2007", type = "PL")
+
+PLs2008 <- cham_bills(year = "2008", type = "PL")
+
+PLs2009 <- cham_bills(year = "2009", type = "PL")
+
+PLs2010 <- cham_bills(year = "2010", type = "PL")
+
+PLs2011 <- cham_bills(year = "2011", type = "PL")
+
+PLs2012 <- cham_bills(year = "2012", type = "PL")
+
+PLs2013 <- cham_bills(year = "2013", type = "PL")
+
+PLs2014 <- cham_bills(year = "2014", type = "PL")
+
+PLs2015 <- cham_bills(year = "2015", type = "PL")
+
+PLs2016 <- cham_bills(year = "2016", type = "PL")
+
+PLs2017 <- cham_bills(year = "2017", type = "PL")
+
+PLs2018 <- cham_bills(year = "2018", type = "PL")
+
+
+#Saving Constitutional Amendments in variables
+
+PECs1991 <- cham_bills(year = "1991", type = "PEC")
+
+PECs1992 <- cham_bills(year = "1992", type = "PEC")
+
+PECs1993 <- cham_bills(year = "1993", type = "PEC")
+
+PECs1994 <- cham_bills(year = "1994", type = "PEC")
+
+PECs1995 <- cham_bills(year = "1995", type = "PEC")
+
+PECs1996 <- cham_bills(year = "1996", type = "PEC")
+
+PECs1997 <- cham_bills(year = "1997", type = "PEC")
+
+PECs1998 <- cham_bills(year = "1998", type = "PEC")
+
+PECs1999 <- cham_bills(year = "1999", type = "PEC")
+
+PECs2000 <- cham_bills(year = "2000", type = "PEC")
+
+PECs2001 <- cham_bills(year = "2001", type = "PEC")
+
+PECs2002 <- cham_bills(year = "2002", type = "PEC")
+
+PECs2003 <- cham_bills(year = "2003", type = "PEC")
+
+PECs2004 <- cham_bills(year = "2004", type = "PEC")
+
+PECs2005 <- cham_bills(year = "2005", type = "PEC")
+
+PECs2006 <- cham_bills(year = "2006", type = "PEC")
+
+PECs2007 <- cham_bills(year = "2007", type = "PEC")
+
+PECs2008 <- cham_bills(year = "2008", type = "PEC")
+
+PECs2009 <- cham_bills(year = "2009", type = "PEC")
+
+PECs2010 <- cham_bills(year = "2010", type = "PEC")
+
+PECs2011 <- cham_bills(year = "2011", type = "PEC")
+
+PECs2012 <- cham_bills(year = "2012", type = "PEC")
+
+PECs2013 <- cham_bills(year = "2013", type = "PEC")
+
+PECs2014 <- cham_bills(year = "2014", type = "PEC")
+
+PECs2015 <- cham_bills(year = "2015", type = "PEC")
+
+PECs2016<- cham_bills(year = "2016", type = "PEC")
+
+PECs2017 <- cham_bills(year = "2017", type = "PEC")
+
+PECs2018 <- cham_bills(year = "2018", type = "PEC")
+
+
+#Saving Complementary Bills in variables
+
+PLPs1991 <- cham_bills(year = "1991", type = "PLP")
+
+PLPs1992 <- cham_bills(year = "1992", type = "PLP")
+
+PLPs1993 <- cham_bills(year = "1993", type = "PLP")
+
+PLPs1994 <- cham_bills(year = "1994", type = "PLP")
+
+PLPs1995 <- cham_bills(year = "1995", type = "PLP")
+
+PLPs1996 <- cham_bills(year = "1996", type = "PLP")
+
+PLPs1997 <- cham_bills(year = "1997", type = "PLP")
+
+PLPs1998 <- cham_bills(year = "1998", type = "PLP")
+
+PLPs1999 <- cham_bills(year = "1999", type = "PLP")
+
+PLPs2000 <- cham_bills(year = "2000", type = "PLP")
+
+PLPs2001 <- cham_bills(year = "2001", type = "PLP")
+
+PLPs2002 <- cham_bills(year = "2002", type = "PLP")
+
+PLPs2003 <- cham_bills(year = "2003", type = "PLP")
+
+PLPs2004 <- cham_bills(year = "2004", type = "PLP")
+
+PLPs2005 <- cham_bills(year = "2005", type = "PLP")
+
+PLPs2006 <- cham_bills(year = "2006", type = "PLP")
+
+PLPs2007 <- cham_bills(year = "2007", type = "PLP")
+
+PLPs2008 <- cham_bills(year = "2008", type = "PLP")
+
+PLPs2009 <- cham_bills(year = "2009", type = "PLP")
+
+PLPs2010 <- cham_bills(year = "2010", type = "PLP")
+
+PLPs2011 <- cham_bills(year = "2011", type = "PLP")
+
+PLPs2012 <- cham_bills(year = "2012", type = "PLP")
+
+PLPs2013 <- cham_bills(year = "2013", type = "PLP")
+
+PLPs2014 <- cham_bills(year = "2014", type = "PLP")
+
+PLPs2015 <- cham_bills(year = "2015", type = "PLP")
+
+PLPs2016 <- cham_bills(year = "2016", type = "PLP")
+
+PLPs2017 <- cham_bills(year = "2017", type = "PLP")
+
+PLPs2018 <- cham_bills(year = "2018", type = "PLP")
+
+
+
+#Saving Provisional Acts in variables (this type of bills was created in 1998. they were only first edited in 2001)
+
+MPCD2001 <- cham_bills(type = "MPV", year = "2001")
+
+MPCD2002 <- cham_bills(type = "MPV", year = "2002")
+
+MPCD2003 <- cham_bills(type = "MPV", year = "2003")
+
+MPCD2004 <- cham_bills(type = "MPV", year = "2004")
+
+MPCD2005 <- cham_bills(type = "MPV", year = "2005")
+
+MPCD2006 <- cham_bills(type = "MPV", year = "2006")
+
+MPCD2007 <- cham_bills(type = "MPV", year = "2007")
+
+MPCD2008 <- cham_bills(type = "MPV", year = "2008")
+
+MPCD2009 <- cham_bills(type = "MPV", year = "2009")
+
+MPCD2010 <- cham_bills(type = "MPV", year = "2010")
+
+MPCD2011 <- cham_bills(type = "MPV", year = "2011")
+
+MPCD2012 <- cham_bills(type = "MPV", year = "2012")
+
+MPCD2013 <- cham_bills(type = "MPV", year = "2013")
+
+MPCD2014 <- cham_bills(type = "MPV", year = "2014")
+
+MPCD2015 <- cham_bills(type = "MPV", year = "2015")
+
+MPCD2016 <- cham_bills(type = "MPV", year = "2016")
+
+MPCD2017 <- cham_bills(type = "MPV", year = "2017")
+
+MPCD2018 <- cham_bills(type = "MPV", year = "2018")
+
+#Merging all information into one datset (this dataset, however only contain information about the bills, e.g., the resumed text of the bill, not voting information)
+
+BillsCD <- bind_rows(PLs1999, PLs2000, PLs2001, PLs2002, PLs2003,PLs2004, PLs2005, PLs2006, PLs2007, PLs2008, PLs2009, PLs2010, 
+                     PLs2011, PLs2012, PLs2013, PLs2014, PLs2015, PLs2016, PLs2017, PLs2018,PECs1991, PECs1992,PECs1993, PECs1994, 
+                     PECs1995,PECs1996, PECs1997, PECs1998, PECs1999, PECs2000, PECs2001, PECs2002, PECs2003, PECs2003, PECs2005, 
+                     PECs2006, PECs2007, PECs2008, PECs2009, PECs2010, PECs2011, PECs2012, PECs2013,PECs2014, PECs2015, 
+                     PECs2016, PECs2017, PECs2018, PLPs1991, PLPs1992, PLPs1993, PLPs1994, PLPs1995, PLPs1996, PLPs1997, 
+                     PLPs1998,PLPs1999, PLPs2000, PLPs2001, PLPs2002, PLPs2003, PLPs2004, PLPs2005, PLPs2006, PLPs2007, PLPs2008, 
+                     PLPs2009,PLPs2010, PLPs2011, PLPs2012, PLPs2013, PLPs2014,PLPs2015, PLPs2016, PLPs2017, PLPs2018, MPCD2001,
+                     MPCD2002, MPCD2003, MPCD2004, MPCD2005, MPCD2006, MPCD2007, MPCD2008, MPCD2009, MPCD2010, MPCD2011, MPCD2012,
+                     MPCD2013, MPCD2014, MPCD2015, MPCD2016, MPCD2017, MPCD2018,.id=NULL)
+
+
+#Changing the name of the collumn 'bill' to 'bill_name' to bind the dataset
+colnames(cham_nominal_votes)[9] <- "bill_name"
+
+#joing tables item_id from table items to table sales
+BillVotes<-merge(BillsCD, cham_nominal_votes, by.x="bill_name", by.y="bill_name", all=FALSE)
+
+#looking for and deleting missing values
+colSums(is.na(BillVotes))
+
+BillVotes2 <- BillVotes %>% drop_na(legislator_vote)
+
+colSums(is.na(BillVotes2))
+
+#saving dataset into a CSV file
+
+write.csv(BillVotes2, "Bills_Votes_1991_2018_2.csv")
+
+
+###########################################################################################################################
+
+#                              Choosing representatives to be analyse by number of votes
+
+##########################################################################################################################
+
+setwd("Your Path")
+
+BillVotes <- fread("Bills_Votes_1991_2018_2.csv", head=TRUE, sep=",")
+
+glimpse(BillVotes)
+
+summary(BillVotes)
+
+BillVotes <- subset(BillVotes, select = -c(1,3:10, 12:33,35, 38:40))
+
+Legislators <- length(unique(BillVotes$legislator_name))
+
+Bills <- length(unique(BillVotes$bill_name))
+
+
+VD <- BillVotes %>% 
+  select(legislator_name, legislator_vote) %>% 
+  group_by(legislator_name)
+
+Dummytable<-table(VD)
+
+df <- data.frame(Dummytable)
+
+VD2 <- df %>%
+  group_by (legislator_name)%>%
+  summarise(total_votes = sum(Freq))
+
+VD2<- arrange(VD2, -total_votes)
+
+hchart(VD2[1:10,], "column", hcaes('legislator_name', y = total_votes, color = total_votes)) %>%
+  hc_title(text = "Sum of how many times a legislator has voted") %>%
+  hc_legend(enabled = FALSE)
